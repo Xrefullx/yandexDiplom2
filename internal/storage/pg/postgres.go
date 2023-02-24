@@ -188,7 +188,7 @@ func (PG *PgStorage) GetUserBalance(ctx context.Context, userLogin string) (floa
 
 func (PG *PgStorage) AddWithdraw(ctx context.Context, withdraw models.Withdraw) error {
 	result, err := PG.connect.ExecContext(ctx, `
-	insert into public.withdraws (login, numberorder, sum, uploadedorder)
+	insert into public.withdraws (login, numberorder, sum, uploaded)
 	select $1, $2, $3, $4
 	where (
           select sum_order >= sum_withdraws + $3 from (
