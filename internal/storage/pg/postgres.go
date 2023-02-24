@@ -179,7 +179,7 @@ func (PG *PgStorage) GetOrdersProcess(ctx context.Context) ([]models.Order, erro
 func (PG *PgStorage) GetUserBalance(ctx context.Context, userLogin string) (float64, float64, error) {
 	var ordersSUM float64
 	var withdrawsSUM float64
-	err := PG.connect.QueryRowContext(ctx, `select (case when sumOrder is null then 0 else sum_order end) as sum_order, (case when sum_withdraws is null then 0 else sum_withdraws end) as sum_withdraws from
+	err := PG.connect.QueryRowContext(ctx, `select (case when sum is null then 0 else sum end) as sum_order, (case when sum_withdraws is null then 0 else sum_withdraws end) as sum_withdraws from
 	 (select sum(accrualorder) as  sum_order from public.orders where login = $1) as orders,
 	 (select sum(sum) as  sum_withdraws from public.withdraws where login = $1) as withdraws`, userLogin).
 		Scan(&ordersSUM, &withdrawsSUM)
@@ -188,7 +188,7 @@ func (PG *PgStorage) GetUserBalance(ctx context.Context, userLogin string) (floa
 
 func (PG *PgStorage) AddWithdraw(ctx context.Context, withdraw models.Withdraw) error {
 	result, err := PG.connect.ExecContext(ctx, `
-	insert into public.withdraws (login, numberorder, sum, uploadedorder)
+	insert into public.withdraws (login, numberorder, sum, uploaded)
 	select $1, $2, $3, $4
 	where (
           select sumOrder >= sumWithdraws + $3 from (
