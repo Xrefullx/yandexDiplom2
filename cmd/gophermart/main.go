@@ -26,7 +26,7 @@ func main() {
 	var zapLogger *zap.Logger
 	var err error
 	if err = env.Parse(&cfg); err != nil {
-		log.Fatalln("ошибка считывания конфига", zap.Error(err))
+		log.Fatalln("config reading error", zap.Error(err))
 	}
 	flag.Parse()
 	if cfg.ReleaseMOD {
@@ -37,14 +37,14 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	zapLogger.Info("считана следующая конфигурация",
+	zapLogger.Info("the following configuration is read",
 		zap.String("AddressServer", cfg.Address),
 		zap.String("AccrualAddress", cfg.AccrualAddress),
 		zap.Bool("ReleaseMOD", cfg.ReleaseMOD),
 	)
-	zapLogger.Debug("полная конфигурация", zap.Any("config", cfg))
+	zapLogger.Debug("full configuration", zap.Any("config", cfg))
 	if err = container.ContainerBuild(cfg, zapLogger); err != nil {
-		zapLogger.Fatal("ошибка запуска Di контейнера", zap.Error(err))
+		zapLogger.Fatal("error starting the Di container", zap.Error(err))
 	}
 	defer func() {
 		if err = container.GetStorage().Close(); err != nil {
@@ -57,7 +57,7 @@ func main() {
 			time.Sleep(consta.TimeSleepCalculationLoyaltyPoints)
 			err = service.CalculationLoyaltyPoints(ctx)
 			if err != nil {
-				zapLogger.Error("ошибка в работе модуля", zap.Error(err))
+				zapLogger.Error("error in the module operation", zap.Error(err))
 			}
 		}
 	}()
