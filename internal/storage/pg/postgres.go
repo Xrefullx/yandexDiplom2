@@ -215,7 +215,7 @@ func (PG *PgStorage) GetWithdraws(ctx context.Context, userLogin string) ([]mode
 	var withdraws []models.Withdraw
 	rows, err := PG.connect.QueryContext(ctx, `select login, numberorder, sum, uploadedorder from public.withdraws
 	where login = $1
-	order by uploadedorder`, userLogin)
+	`, userLogin)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, err
 	}
