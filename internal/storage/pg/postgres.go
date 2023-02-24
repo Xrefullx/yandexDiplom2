@@ -53,7 +53,7 @@ func createTables(connect *sql.DB) error {
 		 accrualOrder double precision,
 		 uploadedOrder timestamp default now(),
 		 createdOrder timestamp default now(),
-		 foreign key (login) references public.users (login)
+		 foreign key (login) references public.user (login)
 	);
 	
 	create table if not exists public.withdraws(
@@ -71,7 +71,7 @@ func createTables(connect *sql.DB) error {
 
 func (PG *PgStorage) Adduser(ctx context.Context, user models.User) error {
 	result, err := PG.connect.ExecContext(ctx,
-		`insert into public.users (login, password) 
+		`insert into public.user (login, password) 
 		values ($1, $2) on conflict do nothing`,
 		user.Login, user.Password)
 	if err != nil {
@@ -89,7 +89,7 @@ func (PG *PgStorage) Adduser(ctx context.Context, user models.User) error {
 
 func (PG *PgStorage) Authentication(ctx context.Context, user models.User) (bool, error) {
 	var done int
-	err := PG.connect.QueryRowContext(ctx, `select count(1) from public.users where login=$1 and password=$2`,
+	err := PG.connect.QueryRowContext(ctx, `select count(1) from public.user where login=$1 and password=$2`,
 		user.Login, user.Password).Scan(&done)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return false, err
