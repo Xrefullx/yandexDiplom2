@@ -193,7 +193,7 @@ func (PG *PgStorage) AddWithdraw(ctx context.Context, withdraw models.Withdraw) 
 	select $1, $2, $3, $4
 	where (
           select sumOrder >= sumWithdraws + $3 from (
-          select (case when sumOrder is null then 0 else sumOrder end ) as sumOrder,
+          select (case when sum is null then 0 else sum end ) as sumOrder,
           (case when sumWithdraws is null then 0 else sumWithdraws end ) as sumWithdraws from
           (select sum(accrualOrder) as  sum_order from public.orders where login = $1) as orders,
           (select sum(sum) as  sumWithdraws from public.withdraws where login = $1) as withdraws) as s
