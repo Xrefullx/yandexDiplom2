@@ -180,8 +180,8 @@ func (PG *PgStorage) GetUserBalance(ctx context.Context, userLogin string) (floa
 	var ordersSUM float64
 	var withdrawsSUM float64
 	err := PG.connect.QueryRowContext(ctx, `select (case when sum_order is null then 0.0 else sum_order end) as sum_order, (case when sum_withdraws is null then 0.0 else sum_withdraws end) as sum_withdraws from
-	 (select sum(accrualorder) as  sum_order from public.orders where login_user = $1) as orders,
-	 (select sum(sum) as  sum_withdraws from public.withdraws where login_user = $1) as withdraws`, userLogin).
+	 (select sum(accrualorder) as  sum_order from public.orders where login = $1) as orders,
+	 (select sum(sum) as  sum_withdraws from public.withdraws where login = $1) as withdraws`, userLogin).
 		Scan(&ordersSUM, &withdrawsSUM)
 	return ordersSUM, withdrawsSUM, err
 }
