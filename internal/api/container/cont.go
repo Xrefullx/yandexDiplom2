@@ -4,6 +4,7 @@ import (
 	"github.com/Xrefullx/yandexDiplom2/internal/models"
 	"github.com/Xrefullx/yandexDiplom2/internal/storage"
 	"github.com/Xrefullx/yandexDiplom2/internal/storage/pg"
+	_ "github.com/lib/pq"
 	"github.com/sarulabs/di"
 	"go.uber.org/zap"
 )

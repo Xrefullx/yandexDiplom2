@@ -161,7 +161,7 @@ func (PG *PgStorage) GetOrdersProcess(ctx context.Context) ([]models.Order, erro
 	var orders []models.Order
 	sliceStatus := []interface{}{consta.OrderStatusPROCESSING, consta.OrderStatusNEW, consta.OrderStatusREGISTERED, consta.OrderStatusInvalid}
 	rows, err := PG.connect.QueryContext(ctx, `select numberOrder, login, statusOrder, accrualOrder, uploadedOrder
-	from public.orders where statusOrder in ($1, $2, $3)`, sliceStatus...)
+	from public.orders where statusOrder in ($1, $2, $3,$4)`, sliceStatus...)
 	if err != nil {
 		return nil, err
 	}
