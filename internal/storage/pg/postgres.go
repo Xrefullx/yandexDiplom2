@@ -102,8 +102,8 @@ func (PG *PgStorage) Authentication(ctx context.Context, user models.User) (bool
 
 func (PG *PgStorage) GetOrder(ctx context.Context, numberOrder string) (models.Order, error) {
 	var order models.Order
-	err := PG.connect.QueryRowContext(ctx, `select numberOrder, login, statusOrder, accrualOrder, uploadedOrder
-	from public.orders where number_order=$1 order by created_order desc`,
+	err := PG.connect.QueryRowContext(ctx, `select numberorder, login, statusorder, accrualorder, uploadedorder
+	from public.orders where numberOrder=$1 order by createdorder desc`,
 		numberOrder).Scan(&order.NumberOrder, &order.UserLogin, &order.Status,
 		&order.Accrual, &order.Uploaded)
 	if err != nil {
@@ -114,8 +114,8 @@ func (PG *PgStorage) GetOrder(ctx context.Context, numberOrder string) (models.O
 
 func (PG *PgStorage) GetOrders(ctx context.Context, userLogin string) ([]models.Order, error) {
 	var orders []models.Order
-	rows, err := PG.connect.QueryContext(ctx, `select numberOrder, login, statusOrder, accrualOrder, uploadedOrder
-	from public.orders where login_user=$1`, userLogin)
+	rows, err := PG.connect.QueryContext(ctx, `select numberOrder, login, statusorder, accrualorder, uploadedorder
+	from public.orders where login=$1`, userLogin)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func (PG *PgStorage) GetOrders(ctx context.Context, userLogin string) ([]models.
 
 func (PG *PgStorage) AddOrder(ctx context.Context, numberOrder string, order models.Order) error {
 	result, err := PG.connect.ExecContext(ctx, `insert into public.orders 
-    (numberOrder, login, statusOrder, uploadedOrder, accrualOrder)  values ($1, $2, $3, $4, $5) on conflict do nothing`,
+    (numberorder, login, statusorder, uploadedorder, accrualorder)  values ($1, $2, $3, $4, $5) on conflict do nothing`,
 		numberOrder, order.UserLogin, order.Status, order.Uploaded, order.Accrual)
 	if err != nil {
 		return err
@@ -148,8 +148,8 @@ func (PG *PgStorage) AddOrder(ctx context.Context, numberOrder string, order mod
 }
 
 func (PG *PgStorage) UpdateOrder(ctx context.Context, loyaltyPoint models.Loyalty) error {
-	_, err := PG.connect.ExecContext(ctx, `update public.orders set accrualOrder=$1, statusOrder=$2,
-                         uploadedOrder=now() where numberOrder =$3`,
+	_, err := PG.connect.ExecContext(ctx, `update public.orders set accrualorder=$1, statusorder=$2,
+                         uploadedorder=now() where numberorder =$3`,
 		loyaltyPoint.Accrual, loyaltyPoint.Status, loyaltyPoint.NumberOrder)
 	if err != nil {
 		return err
@@ -160,8 +160,8 @@ func (PG *PgStorage) UpdateOrder(ctx context.Context, loyaltyPoint models.Loyalt
 func (PG *PgStorage) GetOrdersProcess(ctx context.Context) ([]models.Order, error) {
 	var orders []models.Order
 	sliceStatus := []interface{}{consta.OrderStatusPROCESSING, consta.OrderStatusNEW, consta.OrderStatusREGISTERED, consta.OrderStatusInvalid}
-	rows, err := PG.connect.QueryContext(ctx, `select numberOrder, login, statusOrder, accrualOrder, uploadedOrder
-	from public.orders where statusOrder in ($1, $2, $3,$4)`, sliceStatus...)
+	rows, err := PG.connect.QueryContext(ctx, `select numberorder, login, statusorder, accrualorder, uploadedorder
+	from public.orders where statusorder in ($1, $2, $3,$4)`, sliceStatus...)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +180,7 @@ func (PG *PgStorage) GetUserBalance(ctx context.Context, userLogin string) (floa
 	var ordersSUM float64
 	var withdrawsSUM float64
 	err := PG.connect.QueryRowContext(ctx, `select (case when sumOrder is null then 0 else sum_order end) as sum_order, (case when sum_withdraws is null then 0 else sum_withdraws end) as sum_withdraws from
-	 (select sum(accrualOrder) as  sum_order from public.orders where login = $1) as orders,
+	 (select sum(accrualorder) as  sum_order from public.orders where login = $1) as orders,
 	 (select sum(sum) as  sum_withdraws from public.withdraws where login = $1) as withdraws`, userLogin).
 		Scan(&ordersSUM, &withdrawsSUM)
 	return ordersSUM, withdrawsSUM, err
@@ -188,7 +188,7 @@ func (PG *PgStorage) GetUserBalance(ctx context.Context, userLogin string) (floa
 
 func (PG *PgStorage) AddWithdraw(ctx context.Context, withdraw models.Withdraw) error {
 	result, err := PG.connect.ExecContext(ctx, `
-	insert into public.withdraws (login, numberOrder, sum, uploadedOrder)
+	insert into public.withdraws (login, numberorder, sum, uploadedorder)
 	select $1, $2, $3, $4
 	where (
           select sumOrder >= sumWithdraws + $3 from (
@@ -213,9 +213,9 @@ func (PG *PgStorage) AddWithdraw(ctx context.Context, withdraw models.Withdraw) 
 
 func (PG *PgStorage) GetWithdraws(ctx context.Context, userLogin string) ([]models.Withdraw, error) {
 	var withdraws []models.Withdraw
-	rows, err := PG.connect.QueryContext(ctx, `select login, numberOrder, sum, uploadedOrder from public.withdraws
+	rows, err := PG.connect.QueryContext(ctx, `select login, numberorder, sum, uploadedorder from public.withdraws
 	where login = $1
-	order by uploadedOrder`, userLogin)
+	order by uploadedorder`, userLogin)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, err
 	}
