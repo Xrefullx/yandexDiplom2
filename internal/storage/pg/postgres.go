@@ -4,23 +4,23 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/Xrefullx/yandexDiplom2/internal/api/consta"
 	"github.com/Xrefullx/yandexDiplom2/internal/models"
-	"github.com/Xrefullx/yandexDiplom2/internal/utils/consta"
 )
 
-type Storage struct {
+type PgStorage struct {
 	connect *sql.DB
 }
 
-func New(uri string) (*Storage, error) {
+func New(uri string) (*PgStorage, error) {
 	connect, err := sql.Open("postgres", uri)
 	if err != nil {
 		return nil, err
 	}
-	return &Storage{connect: connect}, nil
+	return &PgStorage{connect: connect}, nil
 }
 
-func (PG *Storage) Ping() error {
+func (PG *PgStorage) Ping() error {
 	if err := PG.connect.Ping(); err != nil {
 		return err
 	}
@@ -31,7 +31,7 @@ func (PG *Storage) Ping() error {
 	return nil
 }
 
-func (PG *Storage) Close() error {
+func (PG *PgStorage) Close() error {
 	if err := PG.connect.Close(); err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func createTables(connect *sql.DB) error {
 	return nil
 }
 
-func (PG *Storage) AddUser(ctx context.Context, user models.User) error {
+func (PG *PgStorage) Adduser(ctx context.Context, user models.User) error {
 	result, err := PG.connect.ExecContext(ctx,
 		`insert into public.users (login, password) 
 		values ($1, $2) on conflict do nothing`,
@@ -87,7 +87,7 @@ func (PG *Storage) AddUser(ctx context.Context, user models.User) error {
 	return nil
 }
 
-func (PG *Storage) Authentication(ctx context.Context, user models.User) (bool, error) {
+func (PG *PgStorage) Authentication(ctx context.Context, user models.User) (bool, error) {
 	var done int
 	err := PG.connect.QueryRowContext(ctx, `select count(1) from public.users where login=$1 and password=$2`,
 		user.Login, user.Password).Scan(&done)
@@ -100,7 +100,7 @@ func (PG *Storage) Authentication(ctx context.Context, user models.User) (bool, 
 	return true, nil
 }
 
-func (PG *Storage) GetOrder(ctx context.Context, numberOrder string) (models.Order, error) {
+func (PG *PgStorage) GetOrder(ctx context.Context, numberOrder string) (models.Order, error) {
 	var order models.Order
 	err := PG.connect.QueryRowContext(ctx, `select numberOrder, login, statusOrder, accrualOrder, uploadedOrder
 	from public.orders where number_order=$1 order by created_order desc`,
@@ -112,7 +112,7 @@ func (PG *Storage) GetOrder(ctx context.Context, numberOrder string) (models.Ord
 	return order, nil
 }
 
-func (PG *Storage) GetOrders(ctx context.Context, userLogin string) ([]models.Order, error) {
+func (PG *PgStorage) GetOrders(ctx context.Context, userLogin string) ([]models.Order, error) {
 	var orders []models.Order
 	rows, err := PG.connect.QueryContext(ctx, `select numberOrder, login, statusOrder, accrualOrder, uploadedOrder
 	from public.orders where login_user=$1`, userLogin)
@@ -130,7 +130,7 @@ func (PG *Storage) GetOrders(ctx context.Context, userLogin string) ([]models.Or
 	return orders, rows.Err()
 }
 
-func (PG *Storage) AddOrder(ctx context.Context, numberOrder string, order models.Order) error {
+func (PG *PgStorage) AddOrder(ctx context.Context, numberOrder string, order models.Order) error {
 	result, err := PG.connect.ExecContext(ctx, `insert into public.orders 
     (numberOrder, login, statusOrder, uploadedOrder, accrualOrder)  values ($1, $2, $3, $4, $5) on conflict do nothing`,
 		numberOrder, order.UserLogin, order.Status, order.Uploaded, order.Accrual)
@@ -147,7 +147,7 @@ func (PG *Storage) AddOrder(ctx context.Context, numberOrder string, order model
 	return nil
 }
 
-func (PG *Storage) UpdateOrder(ctx context.Context, loyaltyPoint models.Loyalty) error {
+func (PG *PgStorage) UpdateOrder(ctx context.Context, loyaltyPoint models.Loyalty) error {
 	_, err := PG.connect.ExecContext(ctx, `update public.orders set accrualOrder=$1, statusOrder=$2,
                          uploadedOrder=now() where numberOrder =$3`,
 		loyaltyPoint.Accrual, loyaltyPoint.Status, loyaltyPoint.NumberOrder)
@@ -157,7 +157,7 @@ func (PG *Storage) UpdateOrder(ctx context.Context, loyaltyPoint models.Loyalty)
 	return nil
 }
 
-func (PG *Storage) GetOrdersProcess(ctx context.Context) ([]models.Order, error) {
+func (PG *PgStorage) GetOrdersProcess(ctx context.Context) ([]models.Order, error) {
 	var orders []models.Order
 	sliceStatus := []interface{}{consta.OrderStatusPROCESSING, consta.OrderStatusNEW, consta.OrderStatusREGISTERED, consta.OrderStatusInvalid}
 	rows, err := PG.connect.QueryContext(ctx, `select numberOrder, login, statusOrder, accrualOrder, uploadedOrder
@@ -176,7 +176,7 @@ func (PG *Storage) GetOrdersProcess(ctx context.Context) ([]models.Order, error)
 	return orders, rows.Err()
 }
 
-func (PG *Storage) GetUserBalance(ctx context.Context, userLogin string) (float64, float64, error) {
+func (PG *PgStorage) GetUserBalance(ctx context.Context, userLogin string) (float64, float64, error) {
 	var ordersSUM float64
 	var withdrawsSUM float64
 	err := PG.connect.QueryRowContext(ctx, `select (case when sumOrder is null then 0 else sum_order end) as sum_order, (case when sum_withdraws is null then 0 else sum_withdraws end) as sum_withdraws from
@@ -186,7 +186,7 @@ func (PG *Storage) GetUserBalance(ctx context.Context, userLogin string) (float6
 	return ordersSUM, withdrawsSUM, err
 }
 
-func (PG *Storage) AddWithdraw(ctx context.Context, withdraw models.Withdraw) error {
+func (PG *PgStorage) AddWithdraw(ctx context.Context, withdraw models.Withdraw) error {
 	result, err := PG.connect.ExecContext(ctx, `
 	insert into public.withdraws (login, numberOrder, sum, uploadedOrder)
 	select $1, $2, $3, $4
@@ -211,7 +211,7 @@ func (PG *Storage) AddWithdraw(ctx context.Context, withdraw models.Withdraw) er
 	return nil
 }
 
-func (PG *Storage) GetWithdraws(ctx context.Context, userLogin string) ([]models.Withdraw, error) {
+func (PG *PgStorage) GetWithdraws(ctx context.Context, userLogin string) ([]models.Withdraw, error) {
 	var withdraws []models.Withdraw
 	rows, err := PG.connect.QueryContext(ctx, `select login, numberOrder, sum, uploadedOrder from public.withdraws
 	where login = $1

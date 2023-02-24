@@ -2,29 +2,32 @@ package handlers
 
 import (
 	"context"
-	"github.com/Xrefullx/yandexDiplom2/internal/container"
+	"errors"
+	"fmt"
+	"github.com/Xrefullx/yandexDiplom2/internal/api/consta"
+	"github.com/Xrefullx/yandexDiplom2/internal/api/container"
 	"github.com/Xrefullx/yandexDiplom2/internal/models"
 	"github.com/Xrefullx/yandexDiplom2/internal/utils"
-	"github.com/Xrefullx/yandexDiplom2/internal/utils/consta"
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
+	"go.uber.org/zap"
 	"net/http"
 )
 
-func RegisterUser(c *gin.Context) {
+func Register(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), consta.TimeOutRequest)
 	defer cancel()
 	if !utils.ValidContent(c, "application/json") {
 		return
 	}
+	log := container.GetLog()
 	storage := container.GetStorage()
 	var user models.User
-	// Проверяем правильность формата запроса
-	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+	if err := c.Bind(&user); err != nil {
+		log.Error(consta.ErrorBody, zap.Error(err))
 		c.String(http.StatusInternalServerError, consta.ErrorBody)
 		return
 	}
+	log.Debug("register user", zap.Any("user", user))
 	if user.Login == "" || user.Password == "" {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -32,18 +35,17 @@ func RegisterUser(c *gin.Context) {
 	err := storage.Adduser(ctx, user)
 	if err != nil {
 		if errors.Is(err, consta.ErrorNoUNIQUE) {
-			{
-				c.JSON(http.StatusConflict, gin.H{"error": "Login already exists"})
-				return
-			}
-			c.String(http.StatusInternalServerError, consta.ErrorDataBase)
+			log.Debug("a user with this username already exists", zap.Any("user", user))
+			c.String(http.StatusConflict, "a user with this username already exists")
 			return
 		}
+		log.Error(consta.ErrorDataBase, zap.Error(err), zap.String("func", "Adduser"))
+		c.String(http.StatusInternalServerError, consta.ErrorDataBase)
+		return
 	}
-	authToken := "xrefullxAuth"
-	// Устанавливаем куку с токеном аутентификации
-	c.SetCookie("auth_token", authToken, 60*60*24, "/", "localhost", false, true)
-	// Возвращаем успешный ответ
-	c.JSON(http.StatusOK, gin.H{"message": "User registered and authenticated"})
+	//<-ctx.Done()
+	fmt.Println(errors.Is(ctx.Err(), context.DeadlineExceeded))
+	fmt.Println(errors.Is(ctx.Err(), context.Canceled))
+	log.Debug("the user has been successfully registered", zap.Any("user", user))
 	c.Redirect(http.StatusPermanentRedirect, "/api/user/login")
 }

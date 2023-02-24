@@ -1,11 +1,11 @@
-package pkg
+package storage
 
 import (
 	"context"
 	"github.com/Xrefullx/yandexDiplom2/internal/models"
 )
 
-type Storage interface {
+type LoyalityStorage interface {
 	Ping() error
 	Close() error
 	Adduser(ctx context.Context, user models.User) error

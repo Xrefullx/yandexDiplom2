@@ -4,46 +4,52 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/Xrefullx/yandexDiplom2/internal/container"
+	"github.com/Xrefullx/yandexDiplom2/internal/api/consta"
+	"github.com/Xrefullx/yandexDiplom2/internal/api/container"
 	"github.com/Xrefullx/yandexDiplom2/internal/models"
 	"github.com/Xrefullx/yandexDiplom2/internal/utils"
-	"github.com/Xrefullx/yandexDiplom2/internal/utils/consta"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"strconv"
 	"time"
 )
 
-func Withdraw(c *gin.Context) {
+func AddWithdraw(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), consta.TimeOutRequest)
 	defer cancel()
 	if !utils.ValidContent(c, "application/json") {
 		return
 	}
+	log := container.GetLog()
 	storage := container.GetStorage()
 	user := c.Param("loginUser")
 	body, err := io.ReadAll(c.Request.Body)
-	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
-		c.String(http.StatusInternalServerError, consta.ErrorBody)
+	if err != nil {
+		log.Error(consta.ErrorReadBody, zap.Error(err))
+		c.String(http.StatusInternalServerError, consta.ErrorReadBody)
 		return
 	}
 	var withdraw models.Withdraw
 	err = json.Unmarshal(body, &withdraw)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		log.Error(consta.ErrorBody, zap.Error(err))
 		c.String(http.StatusInternalServerError, consta.ErrorBody)
 		return
 	}
 	withdraw.ProcessedAT, withdraw.UserLogin = time.Now(), user
-
+	log.Debug("a request has been received for debiting funds",
+		zap.Any("withdraw", withdraw),
+		zap.String("loginUser", user))
 	numberOrder, err := strconv.Atoi(withdraw.NumberOrder)
 	if err != nil {
+		log.Debug("order number conversion error", zap.Any("withdraw", withdraw))
 		c.String(http.StatusInternalServerError, "order number conversion error")
 		return
 	}
 	if !utils.LuhValid(numberOrder) {
+		log.Debug(consta.ErrorNumberValidLuhn, zap.Error(err), zap.Int("numberOrder", numberOrder))
 		c.String(http.StatusUnprocessableEntity, consta.ErrorNumberValidLuhn)
 		return
 	}
@@ -53,24 +59,10 @@ func Withdraw(c *gin.Context) {
 			c.String(http.StatusPaymentRequired, consta.ErrorStatusShortfallAccount.Error())
 			return
 		}
+		log.Error(consta.ErrorDataBase, zap.Error(err), zap.String("func", "AddWithdraw"))
 		c.String(http.StatusInternalServerError, consta.ErrorDataBase)
 		return
 	}
+	log.Debug("the write-off has been completed", zap.Any("withdraw", withdraw))
 	c.String(http.StatusOK, "the write-off has been completed")
-}
-func GetWithdrawsByUser(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), consta.TimeOutRequest)
-	defer cancel()
-	storage := container.GetStorage()
-	user := c.Param("loginUser")
-	orders, err := storage.GetWithdraws(ctx, user)
-	if err != nil {
-		c.String(http.StatusInternalServerError, consta.ErrorDataBase)
-		return
-	}
-	if len(orders) == 0 {
-		c.String(http.StatusNoContent, "no data")
-		return
-	}
-	c.JSON(http.StatusOK, orders)
 }

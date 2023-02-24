@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/Xrefullx/yandexDiplom2/internal/api/router"
+	"github.com/Xrefullx/yandexDiplom2/internal/api/consta"
+	"github.com/Xrefullx/yandexDiplom2/internal/api/container"
+	"github.com/Xrefullx/yandexDiplom2/internal/api/handlers"
 	"github.com/Xrefullx/yandexDiplom2/internal/api/server"
-	"github.com/Xrefullx/yandexDiplom2/internal/container"
+	"github.com/Xrefullx/yandexDiplom2/internal/api/service"
 	"github.com/Xrefullx/yandexDiplom2/internal/models"
-	"github.com/Xrefullx/yandexDiplom2/internal/utils"
-	"github.com/Xrefullx/yandexDiplom2/internal/utils/consta"
 	"github.com/caarlos0/env/v6"
 	"go.uber.org/zap"
 	"log"
@@ -29,7 +29,7 @@ func main() {
 		log.Fatalln("config reading error", zap.Error(err))
 	}
 	flag.Parse()
-	if err = container.Build(cfg, zapLogger); err != nil {
+	if err = container.ContainerBuild(cfg, zapLogger); err != nil {
 		zapLogger.Fatal("error launching the Di container", zap.Error(err))
 	}
 	defer func() {
@@ -41,12 +41,12 @@ func main() {
 		for {
 			ctx := context.Background()
 			time.Sleep(consta.TimeSleepCalculationLoyaltyPoints)
-			err = utils.CalculationLoyaltyPoints(ctx)
+			err = service.CalculationLoyaltyPoints(ctx)
 			if err != nil {
 				zapLogger.Error("ошибка ", zap.Error(err))
 			}
 		}
 	}()
-	r := router.Router()
+	r := handlers.Router()
 	server.InitServer(r, cfg)
 }

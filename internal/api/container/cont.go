@@ -2,23 +2,27 @@ package container
 
 import (
 	"github.com/Xrefullx/yandexDiplom2/internal/models"
-	"github.com/Xrefullx/yandexDiplom2/internal/pkg/pg"
+	"github.com/Xrefullx/yandexDiplom2/internal/storage"
+	"github.com/Xrefullx/yandexDiplom2/internal/storage/pg"
 	"github.com/sarulabs/di"
 	"go.uber.org/zap"
 )
 
-var Container di.Container
+var DiContainer di.Container
 
-func Build(cfg models.Config, logger *zap.Logger) error {
+func ContainerBuild(cfg models.Config, logger *zap.Logger) error {
 	builder, err := di.NewBuilder()
 	if err != nil {
 		return err
 	}
-	var Storage pg.Storage
+	var LoyalityStorage storage.LoyalityStorage
 	if cfg.DataBaseURI != "" {
-		_, _ = pg.New(cfg.DataBaseURI)
+		LoyalityStorage, err = pg.New(cfg.DataBaseURI)
+		if err != nil {
+			return err
+		}
 	}
-	if err = Storage.Ping(); err != nil {
+	if err = LoyalityStorage.Ping(); err != nil {
 		return err
 	}
 	if err = builder.Add(di.Def{
@@ -33,9 +37,9 @@ func Build(cfg models.Config, logger *zap.Logger) error {
 	}
 	if err = builder.Add(di.Def{
 		Name:  "storage",
-		Build: func(ctn di.Container) (interface{}, error) { return Storage, nil }}); err != nil {
+		Build: func(ctn di.Container) (interface{}, error) { return LoyalityStorage, nil }}); err != nil {
 		return err
 	}
-	Container = builder.Build()
+	DiContainer = builder.Build()
 	return nil
 }

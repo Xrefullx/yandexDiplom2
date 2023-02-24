@@ -1,11 +1,11 @@
-package utils
+package service
 
 import (
 	"context"
 	"encoding/json"
-	"github.com/Xrefullx/yandexDiplom2/internal/container"
+	"github.com/Xrefullx/yandexDiplom2/internal/api/consta"
+	"github.com/Xrefullx/yandexDiplom2/internal/api/container"
 	"github.com/Xrefullx/yandexDiplom2/internal/models"
-	"github.com/Xrefullx/yandexDiplom2/internal/utils/consta"
 	"io"
 	"net/http"
 	"net/url"

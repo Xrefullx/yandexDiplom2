@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"context"
-	"github.com/Xrefullx/yandexDiplom2/internal/container"
+	"github.com/Xrefullx/yandexDiplom2/internal/api/consta"
+	"github.com/Xrefullx/yandexDiplom2/internal/api/container"
 	"github.com/Xrefullx/yandexDiplom2/internal/models"
 	"github.com/Xrefullx/yandexDiplom2/internal/utils"
-	"github.com/Xrefullx/yandexDiplom2/internal/utils/consta"
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
@@ -18,24 +19,29 @@ func Login(c *gin.Context) {
 	if !utils.ValidContent(c, "application/json") {
 		return
 	}
+	log := container.GetLog()
 	storage := container.GetStorage()
 	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+	if err := c.Bind(&user); err != nil {
+		log.Error(consta.ErrorBody, zap.Error(err))
 		c.String(http.StatusInternalServerError, consta.ErrorBody)
 		return
 	}
+	log.Debug("user authorization", zap.Any("user", user))
 	if user.Login == "" || user.Password == "" {
-		c.String(http.StatusBadRequest, "login or pass is not valid")
+		log.Debug("invalid username or password", zap.Any("user", user))
+		c.String(http.StatusBadRequest, "invalid username or password")
 		return
 	}
 	authenticationUser, err := storage.Authentication(ctx, user)
 	if err != nil {
+		log.Error(consta.ErrorDataBase, zap.Error(err))
 		c.String(http.StatusInternalServerError, consta.ErrorDataBase)
 		return
 	}
 	if !authenticationUser {
-		c.String(http.StatusUnauthorized, "login or pass is not correct")
+		log.Debug("the password or login is not correct", zap.Any("user", user))
+		c.String(http.StatusUnauthorized, "the password or login is not correct")
 		return
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &models.Claims{
@@ -44,9 +50,13 @@ func Login(c *gin.Context) {
 			IssuedAt:  jwt.At(time.Now())},
 		Login: user.Login,
 	})
+	log.Debug("the user has successfully logged in",
+		zap.Any("user", user),
+		zap.Any("token", token))
 	accessToken, err := token.SignedString([]byte(container.GetConfig().SecretKey))
 	if err != nil {
-		c.String(http.StatusInternalServerError, "error generation jwt")
+		log.Error("error token", zap.Error(err))
+		c.String(http.StatusInternalServerError, "error token")
 		return
 	}
 	c.Header("Authorization", "Bearer "+accessToken)
