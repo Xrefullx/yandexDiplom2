@@ -64,3 +64,5 @@ func main() {
 	r := handlers.Router(cfg)
 	server.InitServer(r, cfg)
 }
+
+//Снова накосячил с гитом, совершил неправильную последовательность отката коммита, сейчас вернул всё через команду git reset --soft HEAD^1
