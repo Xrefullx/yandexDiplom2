@@ -85,7 +85,6 @@ func (PG *PgStorage) Adduser(ctx context.Context, user models.User) error {
 	if row == 0 || row == ' ' {
 		return consta.ErrorNoUNIQUE
 	}
-	defer PG.Close()
 	return nil
 }
 
@@ -99,7 +98,6 @@ func (PG *PgStorage) Authentication(ctx context.Context, user models.User) (bool
 	if done == 0 || done == ' ' {
 		return false, nil
 	}
-	defer PG.Close()
 	return true, nil
 }
 
@@ -112,7 +110,6 @@ func (PG *PgStorage) GetOrder(ctx context.Context, numberOrder string) (models.O
 	if err != nil {
 		return order, err
 	}
-	defer PG.Close()
 	return order, nil
 }
 
@@ -131,7 +128,6 @@ func (PG *PgStorage) GetOrders(ctx context.Context, userLogin string) ([]models.
 		}
 		orders = append(orders, order)
 	}
-	defer PG.Close()
 	return orders, rows.Err()
 }
 
@@ -149,7 +145,6 @@ func (PG *PgStorage) AddOrder(ctx context.Context, numberOrder string, order mod
 	if row == 0 {
 		return consta.ErrorNoUNIQUE
 	}
-	defer PG.Close()
 	return nil
 }
 
@@ -160,7 +155,6 @@ func (PG *PgStorage) UpdateOrder(ctx context.Context, loyaltyPoint models.Loyalt
 	if err != nil {
 		return err
 	}
-	defer PG.Close()
 	return nil
 }
 
@@ -180,7 +174,6 @@ func (PG *PgStorage) GetOrdersProcess(ctx context.Context) ([]models.Order, erro
 		}
 		orders = append(orders, order)
 	}
-	defer PG.Close()
 	return orders, rows.Err()
 }
 
@@ -191,7 +184,6 @@ func (PG *PgStorage) GetUserBalance(ctx context.Context, userLogin string) (floa
 	 (select sum(accrualorder) as  sum_order from public.orders where login = $1) as orders,
 	 (select sum(sum) as  sum_withdraws from public.withdraws where login = $1) as withdraws`, userLogin).
 		Scan(&ordersSUM, &withdrawsSUM)
-	defer PG.Close()
 	return ordersSUM, withdrawsSUM, err
 }
 
@@ -217,7 +209,6 @@ func (PG *PgStorage) AddWithdraw(ctx context.Context, withdraw models.Withdraw) 
 	if affected == 0 {
 		return consta.ErrorStatusShortfallAccount
 	}
-	defer PG.Close()
 	return nil
 }
 
@@ -237,6 +228,5 @@ func (PG *PgStorage) GetWithdraws(ctx context.Context, userLogin string) ([]mode
 		}
 		withdraws = append(withdraws, withdraw)
 	}
-	defer PG.Close()
 	return withdraws, rows.Err()
 }
