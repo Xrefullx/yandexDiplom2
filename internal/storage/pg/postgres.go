@@ -4,10 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"github.com/Xrefullx/yandexDiplom2/internal/api/consta"
 	"github.com/Xrefullx/yandexDiplom2/internal/models"
-	"strconv"
 )
 
 type PgStorage struct {
@@ -187,22 +185,8 @@ func (PG *PgStorage) GetUserBalance(ctx context.Context, userLogin string) (floa
 	 (select sum(accrualorder) as  sum_order from public.orders where login = $1) as orders,
 	 (select sum(sum) as  sum_withdraws from public.withdraws where login = $1) as withdraws`, userLogin).
 		Scan(&ordersSUM, &withdrawsSUM)
-	if err != nil {
-		return 0, 0, err
-	}
-	// Форматирование строк с двумя знаками после запятой
-	ordersStr := fmt.Sprintf("%.2f", ordersSUM)
-	withdrawsStr := fmt.Sprintf("%.2f", withdrawsSUM)
-	// Преобразование строк в значения типа float64
-	orders, err := strconv.ParseFloat(ordersStr, 64)
-	if err != nil {
-		return 0, 0, err
-	}
-	withdraws, err := strconv.ParseFloat(withdrawsStr, 64)
-	if err != nil {
-		return 0, 0, err
-	}
-	return orders, withdraws, nil
+
+	return ordersSUM, withdrawsSUM, err
 }
 
 func (PG *PgStorage) AddWithdraw(ctx context.Context, withdraw models.Withdraw) error {
