@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
+	"strconv"
 )
 
 func UserBalance(c *gin.Context) {
@@ -25,14 +26,18 @@ func UserBalance(c *gin.Context) {
 		c.String(http.StatusInternalServerError, consta.ErrorDataBase)
 		return
 	}
-	response := map[string]string{
-		"current":   fmt.Sprintf("%.2f", sum-spent),
-		"withdrawn": fmt.Sprintf("%.2f", spent),
+	currentStr := fmt.Sprintf("%.2f", sum-spent)
+	withdrawnStr := fmt.Sprintf("%.2f", spent)
+	current, _ := strconv.ParseFloat(currentStr, 64)
+	withdrawn, _ := strconv.ParseFloat(withdrawnStr, 64)
+	response := map[string]float64{
+		"current":   current,
+		"withdrawn": withdrawn,
 	}
 	log.Debug("баланс пользователя", zap.String("loginUser", user),
 		zap.Float64("sum", sum),
 		zap.Float64("spent", spent),
-		zap.Float64("current", sum-spent),
+		zap.Float64("current", current),
 	)
 	c.JSONP(http.StatusOK, response)
 }
