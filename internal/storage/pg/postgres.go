@@ -38,6 +38,7 @@ func (PG *PgStorage) Close() error {
 	return nil
 }
 
+// add numeric type
 func createTables(connect *sql.DB) error {
 	_, err := connect.Exec(`
 	create table if not exists public.user(
