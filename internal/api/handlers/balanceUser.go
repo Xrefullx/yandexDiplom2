@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"github.com/Xrefullx/yandexDiplom2/internal/api/consta"
 	"github.com/Xrefullx/yandexDiplom2/internal/api/container"
 	"github.com/gin-gonic/gin"
@@ -24,9 +25,9 @@ func UserBalance(c *gin.Context) {
 		c.String(http.StatusInternalServerError, consta.ErrorDataBase)
 		return
 	}
-	response := map[string]float64{
-		"current":   sum - spent,
-		"withdrawn": spent,
+	response := map[string]string{
+		"current":   fmt.Sprintf("%.2f", sum-spent),
+		"withdrawn": fmt.Sprintf("%.2f", spent),
 	}
 	log.Debug("баланс пользователя", zap.String("loginUser", user),
 		zap.Float64("sum", sum),
