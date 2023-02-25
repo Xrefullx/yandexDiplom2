@@ -10,6 +10,7 @@ require (
 	github.com/sarulabs/di v2.0.0+incompatible
 	github.com/zhashkevych/auth v0.0.0-20200331153139-c37e02c6aad8
 	go.uber.org/zap v1.24.0
+	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 )
 
 require (
