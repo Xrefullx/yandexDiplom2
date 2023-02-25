@@ -179,11 +179,11 @@ func (PG *PgStorage) GetOrdersProcess(ctx context.Context) ([]models.Order, erro
 	return orders, rows.Err()
 }
 
-func (PG *PgStorage) GetUserBalance(ctx context.Context, userLogin string) (float64, float64, error) {
+func (PG *PgStorage) GetUserBalance(ctx context.Context, userLogin string) (float32, float32, error) {
 	var ordersSUM float32
-	roundedOrders := math.Round(float64(ordersSUM*100)) / 100
+	roundedOrders := float32(math.Round(float64(ordersSUM*100)) / 100)
 	var withdrawsSUM float32
-	roundedWithdrawls := math.Round(float64(withdrawsSUM*100)) / 100
+	roundedWithdrawls := float32(math.Round(float64(ordersSUM*100)) / 100)
 	err := PG.connect.QueryRowContext(ctx, `select (case when sum_order is null then 0.0 else sum_order end) as sum_order, (case when sum_withdraws is null then 0.0 else sum_withdraws end) as sum_withdraws from
 	 (select sum(accrualorder) as  sum_order from public.orders where login = $1) as orders,
 	 (select sum(sum) as  sum_withdraws from public.withdraws where login = $1) as withdraws`, userLogin).
