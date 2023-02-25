@@ -51,7 +51,7 @@ func createTables(connect *sql.DB) error {
 		 numberOrder text primary key,
 		 login text,
 		 statusOrder varchar(50),
-		 accrualOrder double precision,
+		 accrualOrder numeric(20,2),
 		 uploadedOrder timestamp default now(),
 		 createdOrder timestamp default now(),
 		 foreign key (login) references public.user (login)
