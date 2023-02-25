@@ -51,7 +51,7 @@ func createTables(connect *sql.DB) error {
 		 numberOrder text primary key,
 		 login text,
 		 statusOrder varchar(50),
-		 accrualOrder decimal(20,2),
+		 accrualOrder decimal(20,4),
 		 uploadedOrder timestamp default now(),
 		 createdOrder timestamp default now(),
 		 foreign key (login) references public.user (login)
@@ -60,7 +60,7 @@ func createTables(connect *sql.DB) error {
 	create table if not exists public.withdraws(
 		 login text,
 		 numberOrder text,
-		 sum decimal(20,2)),
+		 sum decimal(20,4)),
 		 uploaded timestamp default now()
 	);
 	`)
