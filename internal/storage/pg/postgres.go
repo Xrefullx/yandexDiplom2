@@ -202,7 +202,8 @@ func (PG *PgStorage) AddWithdraw(ctx context.Context, withdraw models.Withdraw) 
 					SELECT sum(accrualorder) AS sum_order FROM public.orders WHERE login = $1
 				) AS orders, (
 					SELECT sum(sum) AS sum_withdraws FROM public.withdraws WHERE login = $1
-				) AS withdraws
+				) AS 
+				
 			) AS s
 		);
 	`
