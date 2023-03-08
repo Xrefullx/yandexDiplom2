@@ -1,4 +1,4 @@
-package memStorage
+package memstorage
 
 import (
 	"github.com/Xrefullx/yandexDiplom2/internal/api/consta"
