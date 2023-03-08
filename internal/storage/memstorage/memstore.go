@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// add
 type MemStorage struct {
 	userCash     map[uuid.UUID]models.User
 	orderCash    map[string]models.Order
