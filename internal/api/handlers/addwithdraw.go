@@ -39,13 +39,13 @@ func AddWithdraw(c *gin.Context) {
 		return
 	}
 	withdraw.ProcessedAT, withdraw.UserLogin = time.Now(), user
-	log.Debug("a request has been received for debiting funds",
+	log.Debug("поступил запрос на списание средств",
 		zap.Any("withdraw", withdraw),
 		zap.String("loginUser", user))
 	numberOrder, err := strconv.Atoi(withdraw.NumberOrder)
 	if err != nil {
-		log.Debug("order number conversion error", zap.Any("withdraw", withdraw))
-		c.String(http.StatusInternalServerError, "order number conversion error")
+		log.Debug("ошибка преобразования номера заказа", zap.Any("withdraw", withdraw))
+		c.String(http.StatusInternalServerError, "ошибка преобразования номера заказа")
 		return
 	}
 	if !utils.LuhValid(numberOrder) {
@@ -63,6 +63,6 @@ func AddWithdraw(c *gin.Context) {
 		c.String(http.StatusInternalServerError, consta.ErrorDataBase)
 		return
 	}
-	log.Debug("the write-off has been completed", zap.Any("withdraw", withdraw))
-	c.String(http.StatusOK, "the write-off has been completed")
+	log.Debug("списание совершено", zap.Any("withdraw", withdraw))
+	c.String(http.StatusOK, "списание совершено")
 }

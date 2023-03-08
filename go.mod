@@ -6,11 +6,11 @@ require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1
 	github.com/gin-gonic/gin v1.9.0
+	github.com/google/uuid v1.3.0
 	github.com/lib/pq v1.10.7
 	github.com/sarulabs/di v2.0.0+incompatible
 	github.com/zhashkevych/auth v0.0.0-20200331153139-c37e02c6aad8
 	go.uber.org/zap v1.24.0
-	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 )
 
 require (
