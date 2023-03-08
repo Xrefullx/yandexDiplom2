@@ -3,6 +3,7 @@ package container
 import (
 	"github.com/Xrefullx/yandexDiplom2/internal/models"
 	"github.com/Xrefullx/yandexDiplom2/internal/storage"
+	"github.com/Xrefullx/yandexDiplom2/internal/storage/memstorage"
 	"github.com/Xrefullx/yandexDiplom2/internal/storage/pg"
 	_ "github.com/lib/pq"
 	"github.com/sarulabs/di"
@@ -19,6 +20,11 @@ func ContainerBuild(cfg models.Config, logger *zap.Logger) error {
 	var LoyalityStorage storage.LoyalityStorage
 	if cfg.DataBaseURI != "" {
 		LoyalityStorage, err = pg.New(cfg.DataBaseURI)
+		if err != nil {
+			return err
+		}
+	} else {
+		LoyalityStorage, err = memstorage.New()
 		if err != nil {
 			return err
 		}
